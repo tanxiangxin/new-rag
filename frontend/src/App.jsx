@@ -173,6 +173,17 @@ export default function App() {
     setLoading(false)
   }
 
+  const handleRenameSession = async (sessionId, newName) => {
+    try {
+      const res = await fetch(`${API_BASE}/sessions?name=${encodeURIComponent(newName)}&session_id=${sessionId}`, {
+        method: 'PUT',
+      })
+      if (res.ok) {
+        setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, name: newName } : s))
+      }
+    } catch {}
+  }
+
   const handleCreateKb = async ({ name, description, chunk_size, chunk_overlap }) => {
     const params = new URLSearchParams({ name, description })
     if (chunk_size !== undefined) params.set('chunk_size', chunk_size)
@@ -237,6 +248,7 @@ export default function App() {
           onSelectSession={handleSelectSession}
           onNewSession={handleNewSession}
           onNewKb={() => setShowKbModal(true)}
+          onRenameSession={handleRenameSession}
         />
         <DocumentPanel
           kbId={managingKb}
@@ -280,6 +292,7 @@ export default function App() {
         onSelectSession={handleSelectSession}
         onNewSession={handleNewSession}
         onNewKb={() => setShowKbModal(true)}
+        onRenameSession={handleRenameSession}
       />
 
       <div className="flex-1 flex flex-col min-w-0">

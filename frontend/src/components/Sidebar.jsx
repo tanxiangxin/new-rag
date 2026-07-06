@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from 'react'
+
 export default function Sidebar({
   knowledgeBases,
   selectedKb,
@@ -10,7 +12,63 @@ export default function Sidebar({
   onSelectSession,
   onNewSession,
   onNewKb,
+  onRenameSession,
 }) {
+  const [editingId, setEditingId] = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const [ctxMenu, setCtxMenu] = useState(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (editingId && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [editingId])
+
+  useEffect(() => {
+    const close = () => setCtxMenu(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [])
+
+  const handleDoubleClick = (s) => {
+    setEditingId(s.id)
+    setEditValue(s.name)
+  }
+
+  const handleContextMenu = (e, s) => {
+    e.preventDefault()
+    setCtxMenu({ id: s.id, x: e.clientX, y: e.clientY })
+  }
+
+  const confirmRename = () => {
+    if (editingId && editValue.trim()) {
+      onRenameSession(editingId, editValue.trim())
+    }
+    setEditingId(null)
+    setEditValue('')
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      confirmRename()
+    } else if (e.key === 'Escape') {
+      setEditingId(null)
+      setEditValue('')
+    }
+  }
+
+  const handleCtxRename = () => {
+    if (ctxMenu) {
+      const s = sessions.find(s => s.id === ctxMenu.id)
+      if (s) {
+        setEditingId(s.id)
+        setEditValue(s.name)
+      }
+      setCtxMenu(null)
+    }
+  }
   return (
     <aside className="w-60 bg-gray-50 border-r border-gray-200 flex flex-col shrink-0">
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -87,19 +145,48 @@ export default function Sidebar({
       </div>
       <div className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {sessions.map(s => (
-          <button
+          <div
             key={s.id}
-            onClick={() => onSelectSession(s.id)}
+            onDoubleClick={() => handleDoubleClick(s)}
+            onContextMenu={(e) => handleContextMenu(e, s)}
+            onClick={() => { if (!editingId) onSelectSession(s.id) }}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
               selectedSession === s.id
                 ? 'bg-gray-200 text-gray-900 font-medium'
                 : 'text-gray-600 hover:bg-gray-200'
             }`}
           >
-            <span className="truncate block">{s.name}</span>
-          </button>
+            {editingId === s.id ? (
+              <input
+                ref={inputRef}
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onBlur={confirmRename}
+                onKeyDown={handleKeyDown}
+                onClick={e => e.stopPropagation()}
+                className="w-full px-1 py-0 text-sm border border-blue-400 rounded outline-none bg-white"
+              />
+            ) : (
+              <span className="truncate block">{s.name}</span>
+            )}
+          </div>
         ))}
       </div>
+
+      {ctxMenu && (
+        <div
+          style={{ left: ctxMenu.x, top: ctxMenu.y }}
+          onClick={e => e.stopPropagation()}
+          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 text-sm min-w-[100px]"
+        >
+          <button
+            onClick={handleCtxRename}
+            className="w-full text-left px-4 py-1.5 hover:bg-gray-100 whitespace-nowrap cursor-pointer"
+          >
+            重命名
+          </button>
+        </div>
+      )}
 
       <div className="px-2 py-3 border-t border-gray-200">
         <button

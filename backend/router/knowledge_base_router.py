@@ -2,9 +2,9 @@ from fastapi import APIRouter,Depends,HTTPException
 from sqlalchemy import select
 from backend.database import get_db,AsyncSession
 from typing import Annotated
-from backend.models import KnowledgeBase
+from backend.models import KnowledgeBase,Document
 from backend.service import vector_store
-from backend.schema import KnowledgeResponse
+from backend.schema import KnowledgeResponse,DocumentResponse
 router = APIRouter(prefix="/knowledge",tags=["knowledge"])
 
 @router.post("")
@@ -21,6 +21,9 @@ async def insert_knowledge(
     await db.refresh(kb)
     vector_store.get_collection(kb.id)
     return KnowledgeResponse.model_validate(kb)
+
+
+
 
 @router.get("")
 async def knowledge_list(db: Annotated[AsyncSession,Depends(get_db)]):

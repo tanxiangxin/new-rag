@@ -56,6 +56,13 @@ async def upload(kb_id: str,file:UploadFile,db: Annotated[AsyncSession,Depends(g
 
     return DocumentResponse.model_validate(doc)
 
+@router.get("/doc/{doc_id}")
+async def get_doc_metadata(doc_id: str,db: Annotated[AsyncSession,Depends(get_db)]):
+    result = await db.execute(select(Document).where(Document.id == doc_id))
+    one = result.scalar_one_or_none()
+    if not one:
+        raise HTTPException(status_code=404,detail="没有该文档")
+    return DocumentResponse.model_validate(one)
 
 @router.get("")
 async def document_list(kb_id:str,db:Annotated[AsyncSession,Depends(get_db)]):

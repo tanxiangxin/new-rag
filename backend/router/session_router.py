@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,HTTPException
 from backend.database import get_db
 from backend.models import Session, Messages
 from typing import Annotated
@@ -48,3 +48,13 @@ async def delete_session(session_id: str, db: Annotated[AsyncSession, Depends(ge
         await db.delete(s)
         await db.commit()
     return {"ok": True}
+
+@router.put("")
+async def updata_name(name: str,session_id: str,db: Annotated[AsyncSession,Depends(get_db)]):
+    result = await db.execute(select(Session).where(Session.id == session_id))
+    one = result.scalar_one_or_none()
+    if not one:
+        raise HTTPException(status_code=404,detail="没有该会话")
+    one.name = name
+    await db.commit()
+    return {"ok":True}
