@@ -1,0 +1,15 @@
+langchain
+langchain-community
+langchain-openai
+chromadb
+openai
+fastapi
+uvicorn[standard]
+python-dotenv
+pymupdf
+python-docx
+docx2txt
+sse-starlette
+sqlalchemy>=2.0
+aiomysql
+sentence-transformers
